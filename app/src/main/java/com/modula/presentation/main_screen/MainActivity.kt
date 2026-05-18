@@ -62,7 +62,6 @@ class MainActivity : AppCompatActivity() {
                     when (state) {
                         is Resource.Loading -> {
                             binding.progressBar.isVisible = true
-                            binding.recyclerView.isVisible = false
                         }
                         is Resource.Success -> {
                             binding.progressBar.isVisible = false

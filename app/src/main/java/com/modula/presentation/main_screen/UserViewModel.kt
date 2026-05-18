@@ -22,56 +22,62 @@ class UserViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<Resource<List<User>>>(Resource.Loading)
     val uiState: StateFlow<Resource<List<User>>> = _uiState.asStateFlow()
 
-    private val currentList = mutableListOf<User>()  // holds all loaded items
-    var isLastPage = false                            // stop loading when no more data
-    var isLoading = false                             // prevent duplicate calls
-    var page = 10
+    private val currentList = mutableListOf<User>()
+    var isLastPage = false
+    var isLoading = false
+    private val currentPage = 10
     private var currentSkip = 0
 
     init {
         fetchUsers()
-    }      //auto fetch on screen open
+    }
 
     fun fetchUsers(
-        pageSize: String = page.toString(),
+        pageSize: String = currentPage.toString(),
         skip: String = currentSkip.toString()
     ) {
         if (isLoading || isLastPage) return
-        isLoading = true
-
+        
         val requestSkip = skip.toIntOrNull() ?: 0
+        isLoading = true
 
         getUsersUseCase(pageSize, skip)
             .onEach { result ->
                 when (result) {
                     is Resource.Loading -> {
-                        _uiState.value = Resource.Loading
+                        // Only show loading state if the list is empty
+                        if (currentList.isEmpty()) {
+                            _uiState.value = Resource.Loading
+                        }
                     }
 
                     is Resource.Success -> {
-                        val newItems = result.data
+                        val allItems = result.data
 
-                        // Update last page status based on the items received
-                        isLastPage = newItems.size < page
+                        // Update isLastPage based on total count vs expected count
+                        isLastPage = allItems.size < requestSkip + currentPage
 
                         if (requestSkip == 0) {
-                            // first page → replace list (handles refresh too)
+                            // First page/Refresh: Replace current list
                             currentList.clear()
-                            currentList.addAll(newItems)
+                            currentList.addAll(allItems)
                         } else {
-                            // next pages → append only new unique items
-                            val unique = newItems.filter { new ->
+                            // Pagination: Add only unique new items
+                            val unique = allItems.filter { new ->
                                 currentList.none { it.id == new.id }
                             }
                             currentList.addAll(unique)
                         }
 
+                        // Set skip for the NEXT call based on our local count
                         currentSkip = currentList.size
                         _uiState.value = Resource.Success(currentList.toList())
                     }
 
                     is Resource.Error -> {
-                        _uiState.value = Resource.Error(result.message)
+                        if (currentList.isEmpty()) {
+                            _uiState.value = Resource.Error(result.message)
+                        }
                     }
                 }
             }
