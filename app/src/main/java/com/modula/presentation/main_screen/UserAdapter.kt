@@ -2,6 +2,7 @@ package com.modula.presentation.main_screen
 
 import android.content.res.ColorStateList
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.core.graphics.toColorInt
 import androidx.recyclerview.widget.DiffUtil
@@ -64,6 +65,8 @@ class UserAdapter : RecyclerView.Adapter<UserAdapter.UserViewHolder>() {
                 user.firstName.isNotEmpty() -> user.firstName
                 else -> "NA"
             }
+
+            binding.ivRemove.visibility = View.INVISIBLE
         }
     }
 

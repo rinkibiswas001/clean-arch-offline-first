@@ -25,7 +25,7 @@ class UserViewModel @Inject constructor(
     private val currentList = mutableListOf<User>()
     var isLastPage = false
     var isLoading = false
-    private val currentPage = 10
+    private val currentPage = 15
     private var currentSkip = 0
 
     init {
